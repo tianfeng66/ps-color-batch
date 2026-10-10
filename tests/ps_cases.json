@@ -1,0 +1,28 @@
+{
+  "说明": "fixtures 里每个文件是 Photoshop 2026 对 probe.rgb（64×72）做该调整后的输出。worst = 允许的最大误差（色阶），off = 允许误差 >1 的通道数（与 OpenPhoto 的测试标准相同）。",
+  "cases": [
+    {"file": "sc_multi.rgb", "worst": 1, "settings": {"colors": {"0": [60, -40, 30, 20], "7": [30, 20, -50, -10], "6": [-60, 0, 40, 0], "1": [0, 80, -30, 10]}}},
+    {"file": "sc_multi_abs.rgb", "worst": 1, "settings": {"absolute": true, "colors": {"0": [60, -40, 30, 20], "7": [30, 20, -50, -10], "8": [0, 30, 0, 50], "3": [-70, 0, 40, 0]}}},
+    {"file": "sc_n_abs.rgb", "worst": 1, "settings": {"absolute": true, "colors": {"7": [20, -20, 0, 30]}}},
+    {"file": "sc_k.rgb", "worst": 1, "settings": {"absolute": true, "colors": {"8": [0, 0, 0, 40]}}},
+    {"file": "sc_y.rgb", "worst": 1, "settings": {"colors": {"1": [100, 0, 0, 0]}}},
+
+    {"file": "hs_s50.rgb", "worst": 2, "settings": {"hs": {"master": [0, 50, 0]}}},
+    {"file": "hs_sm50.rgb", "worst": 1, "settings": {"hs": {"master": [0, -50, 0]}}},
+    {"file": "hs_h60.rgb", "worst": 1, "settings": {"hs": {"master": [60, 0, 0]}}},
+    {"file": "hs_hm30.rgb", "worst": 2, "settings": {"hs": {"master": [-30, 0, 0]}}},
+    {"file": "hs_l50.rgb", "worst": 2, "settings": {"hs": {"master": [0, 0, 50]}}},
+    {"file": "hs_lm50.rgb", "worst": 1, "settings": {"hs": {"master": [0, 0, -50]}}},
+    {"file": "hs_mix.rgb", "worst": 4, "settings": {"hs": {"master": [40, 30, -20]}}},
+    {"file": "hs_c.rgb", "worst": 3, "settings": {"hs": {"colorize": true, "cz": [200, 40, 10]}}},
+    {"file": "hr_red_s.rgb", "worst": 5, "off": 400, "settings": {"hs": {"ranges": {"0": [0, -100, 0]}}}},
+    {"file": "hr_red_hm.rgb", "worst": 5, "off": 400, "settings": {"hs": {"master": [30, 0, 0], "ranges": {"0": [60, 0, 0]}}}},
+    {"file": "hr_red_l.rgb", "worst": 5, "off": 400, "settings": {"hs": {"ranges": {"0": [0, 0, 50]}}}},
+    {"file": "hr_red_sm.rgb", "worst": 5, "off": 400, "settings": {"hs": {"master": [0, 50, 0], "ranges": {"0": [0, -50, 0]}}}},
+    {"file": "hr_blue_l.rgb", "worst": 5, "off": 400, "settings": {"hs": {"master": [0, 0, -30], "ranges": {"4": [0, 0, -50]}}}},
+
+    {"file": "vib_sm100.rgb", "worst": 2, "settings": {"vib": [0, -100]}},
+    {"file": "vib_s50.rgb", "worst": 2, "settings": {"vib": [0, 50]}},
+    {"file": "vib_sm50.rgb", "worst": 2, "settings": {"vib": [0, -50]}}
+  ]
+}

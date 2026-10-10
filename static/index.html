@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>批量调色 · 可选颜色 · 色相/饱和度</title>
+<link rel="stylesheet" href="/static/styles.css">
+<script>window.TOKEN = "__TOKEN__";</script>
+</head>
+<body>
+<header>
+  <div class="brand">批量调色 <span class="ver">v__VERSION__</span></div>
+  <button id="btnFolders" class="primary">选择文件夹</button>
+  <button id="btnFiles">选择图片</button>
+  <button id="btnPaste">粘贴路径</button>
+  <label class="chk"><input type="checkbox" id="optRecursive"> 包含子文件夹</label>
+  <label class="chk"><input type="checkbox" id="optAppend"> 追加到当前列表</label>
+  <span id="libInfo" class="muted">还没有载入图片</span>
+  <span class="spacer"></span>
+  <button id="btnClear">清空列表</button>
+</header>
+
+<main>
+  <aside id="left">
+    <div class="left-head">
+      <span id="countText">0 张</span>
+      <div class="seg" id="thumbMode" title="缩略图显示调整后效果还是原图">
+        <button data-v="after" class="on">效果</button><button data-v="before">原图</button>
+      </div>
+    </div>
+    <div id="thumbs"></div>
+  </aside>
+
+  <section id="center">
+    <div class="viewer-bar">
+      <div class="seg" id="viewMode">
+        <button data-v="split" class="on">拖动对比</button>
+        <button data-v="side">左右并排</button>
+        <button data-v="after">只看效果</button>
+      </div>
+      <div class="seg" id="srcMode">
+        <button data-v="live" class="on" title="按右侧参数实时计算的预览">实时预览</button>
+        <button data-v="result" disabled title="导出后可以对比真正写到硬盘上的文件">导出文件</button>
+      </div>
+      <span class="muted hint">按住 空格 看原图 · ← → 切换图片</span>
+      <span class="spacer"></span>
+      <span id="imgInfo" class="muted"></span>
+    </div>
+    <div id="stage">
+      <div id="empty">
+        <h2>三步用法</h2>
+        <ol>
+          <li>点上方「选择文件夹」或「选择图片」（可多选），图片会出现在左侧</li>
+          <li>在右侧调参数：「可选颜色」「色相/饱和度」「自然饱和度」和 PS 的 图像 › 调整 里同名功能一样，可以只用一种，也可以叠加</li>
+          <li>点「先试跑 5 张」看效果，满意后点「全部导出」</li>
+        </ol>
+        <p class="muted">导出的图放在新文件夹里，原图不会被修改。</p>
+      </div>
+      <div id="canvasWrap" hidden>
+        <div class="pane" id="paneBefore"><canvas id="cvBefore"></canvas><span class="tag">调整前</span></div>
+        <div class="pane" id="paneAfter"><canvas id="cvAfter"></canvas><span class="tag" id="tagAfter">调整后</span></div>
+        <div id="splitter"><div class="knob">⇆</div></div>
+      </div>
+      <div id="loading" hidden>载入中…</div>
+    </div>
+  </section>
+
+  <aside id="right">
+    <div class="dlg">
+      <div class="dlg-title">调整</div>
+      <div class="preset-row">
+        <span>预设</span>
+        <select id="presetSel"></select>
+        <button id="presetMenuBtn" class="icon" title="预设菜单">☰</button>
+      </div>
+      <div class="tabs" id="tabs">
+        <button data-v="sc" class="on">可选颜色<i></i></button>
+        <button data-v="hs">色相/饱和度<i></i></button>
+        <button data-v="vib">自然饱和度<i></i></button>
+      </div>
+      <div class="tab-body" id="tab-sc">
+        <div class="dots" id="dots"></div>
+        <div id="sliders"></div>
+        <div class="method">
+          <div>方法</div>
+          <label><input type="radio" name="method" value="rel" checked> 相对</label>
+          <label><input type="radio" name="method" value="abs"> 绝对</label>
+        </div>
+      </div>
+      <div class="tab-body" id="tab-hs" hidden>
+        <select id="hsCh" title="和 PS 一样：选「全局颜色」调整整张图，选某个颜色只调整这种颜色"></select>
+        <div id="hsSliders"></div>
+        <div class="hue-bars" title="上：原来的颜色　下：调整后的颜色">
+          <canvas id="hueBarA" width="360" height="1"></canvas>
+          <canvas id="hueBarW" width="360" height="1"></canvas>
+          <canvas id="hueBarB" width="360" height="1"></canvas>
+        </div>
+        <label class="chk"><input type="checkbox" id="hsColorize"> 着色</label>
+      </div>
+      <div class="tab-body" id="tab-vib" hidden>
+        <div id="vibSliders"></div>
+        <p class="muted note">对应 PS 的 图像 › 调整 › 自然饱和度（Camera Raw 里也是这两项）。「自然饱和度」主要提高原本不太鲜艳的颜色、尽量不动肤色，效果接近 PS；「饱和度」对所有颜色一样加减，与 PS 一致。</p>
+      </div>
+      <div class="dlg-foot">
+        <label class="chk"><input type="checkbox" id="optPreview" checked> 预览</label>
+        <span class="spacer"></span>
+        <button id="btnResetColor">复位此颜色</button>
+        <button id="btnResetAll" title="三种调整全部归零">全部复位</button>
+      </div>
+      <div id="summary" class="muted"></div>
+    </div>
+
+    <div class="export">
+      <div class="sec-title">批量导出</div>
+      <div class="field">
+        <div class="label">输出位置</div>
+        <div id="outDir" class="path">自动：在原文件夹旁边新建「原文件夹名_调色_时间」</div>
+        <div class="btn-line">
+          <button id="btnOutPick">更改…</button>
+          <button id="btnOutAuto">恢复自动</button>
+        </div>
+      </div>
+      <div class="field inline">
+        <div class="label">格式</div>
+        <select id="optFormat">
+          <option value="keep">保持原格式</option>
+          <option value="JPEG">全部转 JPEG</option>
+          <option value="PNG">全部转 PNG</option>
+          <option value="TIFF">全部转 TIFF</option>
+        </select>
+        <div class="label">JPEG 质量</div>
+        <input id="optQuality" type="number" min="60" max="100" value="95">
+      </div>
+      <label class="chk"><input type="checkbox" id="optCompare"> 同时导出「调整前 | 调整后」对比图</label>
+      <div class="btn-line big">
+        <button id="btnSample">先试跑 5 张</button>
+        <button id="btnCurrent">只导出当前图</button>
+        <button id="btnAll" class="primary">全部导出</button>
+      </div>
+      <div id="progress" hidden>
+        <div class="bar"><i></i></div>
+        <div id="progText"></div>
+        <div class="btn-line">
+          <button id="btnStop">停止</button>
+          <button id="btnOpenOut">打开输出文件夹</button>
+        </div>
+      </div>
+      <div id="errors"></div>
+    </div>
+  </aside>
+</main>
+
+<div id="modal" class="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-title">粘贴路径</div>
+    <p class="muted">在访达里选中文件夹或图片，按 <b>⌥ Option + ⌘ Command + C</b> 复制路径，粘贴到下面。每行一个。</p>
+    <textarea id="pasteArea" rows="7" placeholder="/Volumes/可灵美学/xxx/图片文件夹"></textarea>
+    <div class="btn-line right">
+      <button id="pasteCancel">取消</button>
+      <button id="pasteOk" class="primary">载入</button>
+    </div>
+  </div>
+</div>
+
+<div id="presetMenu" class="menu" hidden>
+  <button data-act="save">存储预设…（三种调整一起存）</button>
+  <button data-act="delete">删除当前预设</button>
+  <hr>
+  <button data-act="import">载入 PS 可选颜色预设（.asv）…</button>
+  <button data-act="export">把可选颜色导出为 PS 预设（.asv）</button>
+</div>
+<input type="file" id="asvInput" accept=".asv" hidden>
+<div id="toast"></div>
+
+<script src="/static/selective_color.js"></script>
+<script src="/static/adjust.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
